@@ -1,0 +1,29 @@
+# Etapa de construcción
+FROM node:18 AS builder
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm install
+
+COPY . .
+
+# Compila la app para producción
+RUN npm run build
+
+# Etapa de producción con un servidor estático más ligero
+FROM node:18-alpine AS production
+
+WORKDIR /app
+
+# Instalamos `serve` para servir el build
+RUN npm install -g serve
+
+# Copiamos solo el build
+COPY --from=builder /app/build ./build
+
+# Exponemos el puerto 80
+EXPOSE 80
+
+# Servimos la app
+CMD ["serve", "-s", "build", "-l", "80"]

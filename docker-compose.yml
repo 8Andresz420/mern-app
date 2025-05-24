@@ -1,0 +1,41 @@
+
+services:
+  mongo-db:
+    image: mongo:latest
+    container_name: mongo-db
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - mern-network
+
+  backend:
+    build: ./backend
+    container_name: backend-app
+    ports:
+      - "5000:5000"
+    depends_on:
+      - mongo-db
+    environment:
+      - MONGO_URL=mongodb://mongo-db:27017/mydb
+    networks:
+      - mern-network
+
+  frontend:
+    build: ./frontend
+    container_name: frontend-app
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - mern-network
+
+volumes:
+  mongo-data:
+
+networks:
+  mern-network:
+    driver: bridge
+  
