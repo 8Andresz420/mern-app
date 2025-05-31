@@ -2,51 +2,58 @@ pipeline {
   agent any
 
   environment {
-    DOCKERHUB_USER = 'andresgnzlz333'
-    BACKEND_IMAGE = "${DOCKERHUB_USER}/mern-backend"
-    FRONTEND_IMAGE = "${DOCKERHUB_USER}/mern-frontend"
+    DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials') 
+    DOCKERHUB_USERNAME = 'andresgnzlz333'
+    IMAGE_BACKEND = "andresgnzlz333/mern-backend"
+    IMAGE_FRONTEND = "andresgnzlz333/mern-frontend"
   }
 
   stages {
-    stage('Clonar código') {
+    stage('Checkout') {
       steps {
-        git 'https://github.com/8Andresz420/mern-app.git'
+        git url: 'https://github.com/8Andresz420/mern-app.git', branch: 'main'
       }
     }
 
-    stage('Construir backend') {
+    stage('Build & Push Backend') {
       steps {
-        script {
-          docker.build("${BACKEND_IMAGE}:latest", "./backend")
+        dir('backend') {
+          script {
+            docker.build("${IMAGE_BACKEND}:latest", ".")
+                  .push()
+          }
         }
       }
     }
 
-    stage('Construir frontend') {
+    stage('Build & Push Frontend') {
       steps {
-        script {
-          docker.build("${FRONTEND_IMAGE}:latest", "./frontend")
+        dir('frontend') {
+          script {
+            docker.build("${IMAGE_FRONTEND}:latest", ".")
+                  .push()
+          }
         }
       }
     }
 
-    stage('Login en Docker Hub') {
+    stage('Deploy to Kubernetes') {
       steps {
-        withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-          sh '''
-            echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
-          '''
-        }
+        sh 'kubectl apply -f k8s/backend-deployment.yaml'
+        sh 'kubectl apply -f k8s/frontend-deployment.yaml'
+        sh 'kubectl apply -f k8s/backend-service.yaml'
+        sh 'kubectl apply -f k8s/frontend-service.yaml'
+        sh 'kubectl apply -f k8s/mongo-deployment.yaml'
       }
     }
+  }
 
-    stage('Push imágenes') {
-      steps {
-        script {
-          docker.image("${BACKEND_IMAGE}:latest").push()
-          docker.image("${FRONTEND_IMAGE}:latest").push()
-        }
-      }
+  post {
+    failure {
+      echo 'La ejecución falló'
+    }
+    success {
+      echo 'Despliegue exitoso'
     }
   }
 }
