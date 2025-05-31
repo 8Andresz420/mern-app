@@ -2,7 +2,7 @@ pipeline {
   agent any
 
   environment {
-    DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials') 
+    DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')
     DOCKERHUB_USERNAME = 'andresgnzlz333'
     IMAGE_BACKEND = "andresgnzlz333/mern-backend"
     IMAGE_FRONTEND = "andresgnzlz333/mern-frontend"
@@ -28,8 +28,7 @@ pipeline {
         dir('backend') {
           script {
             docker.withRegistry('https://index.docker.io/v1/', DOCKERHUB_CREDENTIALS) {
-              docker.build("${IMAGE_BACKEND}:latest", ".")
-                    .push()
+              docker.build("${IMAGE_BACKEND}:latest", ".").push()
             }
           }
         }
@@ -41,8 +40,7 @@ pipeline {
         dir('frontend') {
           script {
             docker.withRegistry('https://index.docker.io/v1/', DOCKERHUB_CREDENTIALS) {
-              docker.build("${IMAGE_FRONTEND}:latest", ".")
-                    .push()
+              docker.build("${IMAGE_FRONTEND}:latest", ".").push()
             }
           }
         }
