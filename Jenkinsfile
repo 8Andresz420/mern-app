@@ -15,11 +15,17 @@ pipeline {
       }
     }
 
+    stage('Test Docker') {
+      steps {
+        bat 'docker version'
+      }
+    }
+
     stage('Build & Push Backend') {
       steps {
         dir('backend') {
           script {
-            docker.withRegistry('https://index.docker.io/v1/', "${DOCKERHUB_CREDENTIALS}") {
+            docker.withRegistry('https://index.docker.io/v1/', DOCKERHUB_CREDENTIALS) {
               docker.build("${IMAGE_BACKEND}:latest", ".")
                     .push()
             }
@@ -32,7 +38,7 @@ pipeline {
       steps {
         dir('frontend') {
           script {
-            docker.withRegistry('https://index.docker.io/v1/', "${DOCKERHUB_CREDENTIALS}") {
+            docker.withRegistry('https://index.docker.io/v1/', DOCKERHUB_CREDENTIALS) {
               docker.build("${IMAGE_FRONTEND}:latest", ".")
                     .push()
             }
