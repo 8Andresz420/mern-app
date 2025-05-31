@@ -15,6 +15,16 @@ pipeline {
       }
     }
 
+    
+  stages {
+    stage('Login a Docker Hub') {
+      steps {
+        script {
+          sh "echo ${DOCKERHUB_CREDENTIALS} | docker login -u ${DOCKERHUB_USERNAME} --password-stdin"
+        }
+      }
+    }
+
     stage('Test Docker') {
       steps {
         bat 'where docker'
