@@ -17,41 +17,45 @@ pipeline {
 
     stage('Test Docker') {
       steps {
+        bat 'where docker'
         bat 'docker version'
+        bat 'echo %PATH%'
       }
     }
 
     stage('Build & Push Backend') {
       steps {
+        dir('backend') {
           script {
             docker.withRegistry('https://index.docker.io/v1/', DOCKERHUB_CREDENTIALS) {
               docker.build("${IMAGE_BACKEND}:latest", ".")
                     .push()
             }
           }
-        
+        }
       }
     }
 
     stage('Build & Push Frontend') {
       steps {
+        dir('frontend') {
           script {
             docker.withRegistry('https://index.docker.io/v1/', DOCKERHUB_CREDENTIALS) {
               docker.build("${IMAGE_FRONTEND}:latest", ".")
                     .push()
             }
           }
-        
+        }
       }
     }
 
     stage('Deploy to Kubernetes') {
       steps {
-        sh 'kubectl apply -f k8s/backend-deployment.yaml'
-        sh 'kubectl apply -f k8s/frontend-deployment.yaml'
-        sh 'kubectl apply -f k8s/backend-service.yaml'
-        sh 'kubectl apply -f k8s/frontend-service.yaml'
-        sh 'kubectl apply -f k8s/mongo-deployment.yaml'
+        bat 'kubectl apply -f k8s\\backend-deployment.yaml'
+        bat 'kubectl apply -f k8s\\frontend-deployment.yaml'
+        bat 'kubectl apply -f k8s\\backend-service.yaml'
+        bat 'kubectl apply -f k8s\\frontend-service.yaml'
+        bat 'kubectl apply -f k8s\\mongo-deployment.yaml'
       }
     }
   }
