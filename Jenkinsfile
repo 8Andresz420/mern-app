@@ -23,27 +23,25 @@ pipeline {
 
     stage('Build & Push Backend') {
       steps {
-        dir('backend') {
           script {
             docker.withRegistry('https://index.docker.io/v1/', DOCKERHUB_CREDENTIALS) {
               docker.build("${IMAGE_BACKEND}:latest", ".")
                     .push()
             }
           }
-        }
+        
       }
     }
 
     stage('Build & Push Frontend') {
       steps {
-        dir('frontend') {
           script {
             docker.withRegistry('https://index.docker.io/v1/', DOCKERHUB_CREDENTIALS) {
               docker.build("${IMAGE_FRONTEND}:latest", ".")
                     .push()
             }
           }
-        }
+        
       }
     }
 
