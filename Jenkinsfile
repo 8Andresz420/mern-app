@@ -2,10 +2,11 @@ pipeline {
   agent any
 
   environment {
-    DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')
+    DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials') // ID de las credenciales en Jenkins
     DOCKERHUB_USERNAME = 'andresgnzlz333'
-    IMAGE_BACKEND = "andresgnzlz333/mern-backend"
-    IMAGE_FRONTEND = "andresgnzlz333/mern-frontend"
+    BACKEND_IMAGE = 'andresgnzlz333/mern-backend'
+    FRONTEND_IMAGE = 'andresgnzlz333/mern-frontend'
+    APP_VERSION = 'latest'
   }
 
   stages {
@@ -15,30 +16,21 @@ pipeline {
       }
     }
 
-    stage('Login a Docker Hub') {
+    stage('Docker Login') {
       steps {
-        script {
-          sh "echo ${DOCKERHUB_CREDENTIALS} | docker login -u ${DOCKERHUB_USERNAME} --password-stdin"
-        }
-      }
-    }
-
-    stage('Test Docker') {
-      steps {
-        bat 'where docker'
-        bat 'docker version'
-        bat 'echo %PATH%'
+        powershell """
+          echo ${DOCKERHUB_CREDENTIALS} | docker login -u ${DOCKERHUB_USERNAME} --password-stdin
+        """
       }
     }
 
     stage('Build & Push Backend') {
       steps {
         dir('backend') {
-          script {
-            docker.withRegistry('https://index.docker.io/v1/', DOCKERHUB_CREDENTIALS) {
-              docker.build("${IMAGE_BACKEND}:latest", ".").push()
-            }
-          }
+          powershell """
+            docker build -t ${BACKEND_IMAGE}:${APP_VERSION} -f Dockerfile .
+            docker push ${BACKEND_IMAGE}:${APP_VERSION}
+          """
         }
       }
     }
@@ -46,32 +38,33 @@ pipeline {
     stage('Build & Push Frontend') {
       steps {
         dir('frontend') {
-          script {
-            docker.withRegistry('https://index.docker.io/v1/', DOCKERHUB_CREDENTIALS) {
-              docker.build("${IMAGE_FRONTEND}:latest", ".").push()
-            }
-          }
+          powershell """
+            docker build -t ${FRONTEND_IMAGE}:${APP_VERSION} -f Dockerfile .
+            docker push ${FRONTEND_IMAGE}:${APP_VERSION}
+          """
         }
       }
     }
 
     stage('Deploy to Kubernetes') {
       steps {
-        bat 'kubectl apply -f k8s\\backend-deployment.yaml'
-        bat 'kubectl apply -f k8s\\frontend-deployment.yaml'
-        bat 'kubectl apply -f k8s\\backend-service.yaml'
-        bat 'kubectl apply -f k8s\\frontend-service.yaml'
-        bat 'kubectl apply -f k8s\\mongo-deployment.yaml'
+        powershell """
+          kubectl apply -f k8s\\mongo-deployment.yaml
+          kubectl apply -f k8s\\backend-deployment.yaml
+          kubectl apply -f k8s\\backend-service.yaml
+          kubectl apply -f k8s\\frontend-deployment.yaml
+          kubectl apply -f k8s\\frontend-service.yaml
+        """
       }
     }
   }
 
   post {
-    failure {
-      echo 'La ejecución falló'
-    }
     success {
-      echo 'Despliegue exitoso'
+      echo '✅ Despliegue exitoso'
+    }
+    failure {
+      echo '❌ La ejecución falló'
     }
   }
 }
