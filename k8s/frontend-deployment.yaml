@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: frontend
 spec:
-  replicas: 1
+  replicas: 3
   selector:
     matchLabels:
       app: frontend
@@ -14,20 +14,8 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: andresgnzlz333/frontend-tareas:latest
-          imagePullPolicy: Never
+          image: andresgnzlz333/mern-frontend:latest
+
           ports:
             - containerPort: 80
 ---
-apiVersion: v1
-kind: Service
-metadata:
-  name: frontend
-spec:
-  selector:
-    app: frontend
-  type: NodePort
-  ports:
-    - port: 80         # Puerto interno del servicio
-      targetPort: 80   # Puerto expuesto por el contenedor
-      nodePort: 31003  # Puerto del nodo (acceso externo)

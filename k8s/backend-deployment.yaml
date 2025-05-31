@@ -15,7 +15,7 @@ spec:
       containers:
         - name: backend
           image: andresgnzlz333/mern-backend:latest
-          imagePullPolicy: Never
+
           ports:
             - containerPort: 5000
           env:
